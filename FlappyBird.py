@@ -28,14 +28,26 @@ def draw_pipes(pipes):
             flip_pipe = pygame.transform.flip(pipe_surface,False,True) #create new surface that is being flipped using pygame method
             screen.blit(flip_pipe,pipe)
 
-def check_collision(pipes):
+def check_collision(pipes): #game function check_collision affect the game_active varible, if it returns false it will store the False in the game_active variable
     for pipe in pipes:
         if bird_rect.colliderect(pipe):#check if the bird rectangle collides with the pipe rectangle
-            print('collision')
+            #print('collision')
+            return False
     #if the bird gets too high or too low activate colision,we should avoid to use collision function if not
     #necessary to make the game more efficient, in this case we just need to check the position of the bird to activate collision
     if bird_rect.top <= -100 or bird_rect.bottom >= 900:#the floor is at the position 900 but we need an interval because in games the position is not exactly 900 is a good principle to take in consideration
         print('collision')
+        return False
+    return True #it returns True if neither of the conditions above get triggered, it means that if there is a colision game_active equal to false and the code in the while loop won't run, nothing will happen in the screen
+
+def rotate_bird(bird):
+    new_bird =pygame.transform.rotozoom(bird,-bird_movement*3,1)#rotozoom allows to rotate and zoom or just one of the options, the minus("-"= is to change the direction of the roration
+    return new_bird
+
+def bird_animation():
+    new_bird = bird_frames[bird_index]
+    new_bird_rect = new_bird.get_rect(center = (100,bird_rect.centery))# creates a new rectangle based on the centery of the previous rectangle, so we don't change the position of the bird when we are updating the bird
+    return new_bird,new_bird_rect
 """
 ********** LOGIC FOR FUNCTION FOR THE GAME OVER SCREEN***************
 
@@ -50,7 +62,7 @@ else:
 pygame.init() #initiates all imported pygame modules
 screen = pygame.display.set_mode((576,1024)) #create a black canvas/screen width and height
 clock = pygame.time.Clock() #can limit the frame rate between other things
-
+game_font = pygame.font.Font('04B_19',40) # '04B_19' is a font type used in the flappyBird game,40 is the size of the text
 """
 ********************************************************************
                                    GAME VARIABLES
@@ -61,6 +73,8 @@ bird_movement = 0 #variable that is going to be applyied to the data, is going t
 #and then moving the bird_surface in the while loop
 
 game_active = True
+score = 0
+high_score = 0
 
 #import background background image
 bg_surface = pygame.image.load('sprites/background-day.png').convert()
@@ -80,11 +94,23 @@ floor_surface = pygame.transform.scale2x(floor_surface)
 #to move the floor we nee to update the x point in the while loop, moving by small increments it will look like a fluid motion
 floor_x_pos = 0
 
+#Creating the animation of the bird flap using three images in a list that will be picked in a certain time to give the ilusion of movement(animation)
+bird_downflap = pygame.transform.scale2x(pygame.image.load('sprites/bluebird-downflap.png').convert_alpha())
+bird_midflap  = pygame.transform.scale2x(pygame.image.load('sprites/bluebird-midflap.png').convert_alpha())
+bird_upflap   = pygame.transform.scale2x(pygame.image.load('sprites/bluebird-upflap.png').convert_alpha())
+bird_frames = [bird_downflap,bird_midflap,bird_upflap]
+bird_index = 0
+bird_surface = bird_frames[bird_index]
+bird_rect = bird_surface.get_rect(center = (100,512)) #create rectangle around the bird surface
+
+BIRDFLAP = pygame.USEREVENT +1 #the plus one is to create a different user event since we already have one for the pipe
+pygame.time.set_timer(BIRDFLAP,200) #the index in bird_index is changing every 200 miliseconds, it is going to cycle throught the 3 images of the bird flaps
+
 #imports the picture of the bird and scales
-bird_surface = pygame.image.load('sprites/bluebird-midflap.png').convert()
-bird_surface = pygame.transform.scale2x(bird_surface)
+#bird_surface = pygame.image.load('sprites/bluebird-midflap.png').convert_alpha()#to remove the black surface envoling the bird, this surface appears when we change the rotation of the original image
+#bird_surface = pygame.transform.scale2x(bird_surface)
 #takes the new surface and puts a rectangle around it
-bird_rect = bird_surface.get_rect(center= (100,512))#center is the point choosen for the rectangle and the tuple with the coordinates
+#bird_rect = bird_surface.get_rect(center= (100,512))#center is the point choosen for the rectangle and the tuple with the coordinates
 
 #*************************PIPES PROCESS*****************************************
 #1.IMPORT IMAGE ON SURFACE
@@ -117,9 +143,15 @@ while True:
 
         #check if any keys of the keyboard are pressed down
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_SPACE: #check for a specific key
+            if event.key == pygame.K_SPACE and game_active: #check for a specific key
                 bird_movement = 0#to disable the effects of gravity variable or the jump wouldn't work proprely
                 bird_movement -=12#to make the bird jump we need to make the bird_movement value negative
+            if event.key == pygame.K_SPACE and game_active == False: #only runs if I press space and the game is over
+                game_active = True
+                pipe_list.clear()#when we start the game again we want to avoid spawning multiple pipes from the previous game
+                bird_rect.center = (100,512)#when the game re-starts puts the bird in the original position
+                bird_movement = 0 #clear the burd number because it can be an high positive number afecting the re-start of the game
+
         if event.type == SPAWNPIPE:
             #pipe_list.append(create_pipe()) # we can't use append because in the function create pipe we are returning two variables instead of one, it it was just the bottom pipe it is ok
             #we have to use extend since the function create pipe returns a tupple
@@ -129,7 +161,13 @@ while True:
             extend()method is used to iterate over an iterable(string, tuple, list, set, or dictionary) and then add each
             element of the iterable to the end of the current list.append(
             """
-
+        if event.type == BIRDFLAP:
+            if bird_index <2: #to make sure is not out of range for the index (goes till 2)
+                bird_index += 1
+            else:
+                bird_index = 0
+            bird_surface,bird_rect = bird_animation()#takes an item from the list bird_surface = bird_frames[bird_index] and puts a new rectangle around it, it is important because the images/frames might have different dimensions
+            #but the rectangle must have the same dimesnion as the surface surround them.
 
 
     # 'blit' method put one surface in another,in this case put the background image/surface in the screen surface
@@ -139,10 +177,11 @@ while True:
     if game_active: #the following code only runs if game_active is equal to True
         # ********************************************** BIRD **********************************************
         bird_movement += gravity  # is going to increase from 0.25 to 0.5,0.75,1 etc
+        rotated_bird = rotate_bird(bird_surface)#using a new function that returns a rotated bird based on the original bird surface after being rotated
         bird_rect.centery += bird_movement  # move the rectangle in the axis y
-        screen.blit(bird_surface, bird_rect)  # bird rect is in place where the coordinate tupple would be
+        screen.blit(rotated_bird, bird_rect)  # bird rect is in place where the coordinate tupple would be
 
-        check_collision(pipe_list)
+        game_active = check_collision(pipe_list)
 
         # ********************************************** PIPES **********************************************
         pipe_list = move_pipes(
@@ -181,6 +220,13 @@ To check foor colisions we have to create a rectangle around our player/bird and
 to check for colisions. Creating rectangles - > pygame.Rect(width,height,x,y) or surface.get_rect(rect_position)
 the second gets the rectangle around the surface
 
+Rotation on pygame leds to losing quality
+
+                    Text in pygame
+                1.Create a font(style,size)
+                2.Render the font(text, colour)
+                3.Use the resulting text surface
+
 """
 
-Estou 1.01.17. find a way to have check colisions affect the game_active variable
+Estou 1.21.23. write font on the screen
