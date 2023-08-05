@@ -1,10 +1,9 @@
 # Python-Games
 <H1 align="center">Flappy bird </H1>
 
-<img src="_3bbc34d5-58ca-469f-9a07-c33a3feae12d.jpeg" 
-     width="400" 
-     height="500" />
 
+
+![flappybird](https://github.com/Guilhermertp/Python-Games/assets/80826962/fcbf1f6b-345b-4e80-abf0-d0d187ffe5e3)
 
 
 
