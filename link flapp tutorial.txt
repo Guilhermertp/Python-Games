@@ -1,3 +1,0 @@
-Learning pygame by making Flappy Bird
-
-https://www.youtube.com/watch?v=UZg49z76cLw
