@@ -3,7 +3,7 @@
 
 
 
-![flappybird](https://github.com/Guilhermertp/Python-Games/assets/80826962/fcbf1f6b-345b-4e80-abf0-d0d187ffe5e3)
+![flappybird](https://github.com/Guilhermertp/Python-Games/assets/80826962/fcbf1f6b-345b-4e80-abf0-d0d187ffe5e3?width=300&height=300)
 
 
 
