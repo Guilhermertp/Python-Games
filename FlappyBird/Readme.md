@@ -6,7 +6,7 @@
 </p>
 
 <div align="center">
-<center> <b> <h2>This is a begginer project to learn some
+<center> <b> <h3>This is a begginer project to learn some
 of the pygame functions while training python foundations
-and having fun.<h2><b\> </center>
+and having fun.<h3><b\> </center>
 </div>
