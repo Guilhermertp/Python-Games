@@ -32,6 +32,7 @@ def check_collision(pipes): #game function check_collision affect the game_activ
     for pipe in pipes:
         if bird_rect.colliderect(pipe):#check if the bird rectangle collides with the pipe rectangle
             #print('collision')
+            death_sound.play()#each time the bird hits a pipe or any surface it plays this sound
             return False
     #if the bird gets too high or too low activate colision,we should avoid to use collision function if not
     #necessary to make the game more efficient, in this case we just need to check the position of the bird to activate collision
@@ -48,6 +49,25 @@ def bird_animation():
     new_bird = bird_frames[bird_index]
     new_bird_rect = new_bird.get_rect(center = (100,bird_rect.centery))# creates a new rectangle based on the centery of the previous rectangle, so we don't change the position of the bird when we are updating the bird
     return new_bird,new_bird_rect
+
+def score_display(game_state): #shows the scroe for the main game
+    if game_state == 'main_game':
+        score_surface = game_font.render(str(int(score)), True, (255, 255,255))  # this tupple are the RGB colors(red,green and blue) that we mix to obtain one color this is the max that gives white if everyone was zerp we would get black
+        score_rect = score_surface.get_rect(center=(288, 100))  # creates a rectangle around it to make it easyier to put in the center of the screen
+        screen.blit(score_surface, score_rect)
+    if game_state == 'game_over':
+        score_surface = game_font.render(f'Score: {int(score)}', True, (255, 255,255))  # this tupple are the RGB colors(red,green and blue) that we mix to obtain one color this is the max that gives white if everyone was zerp we would get black
+        score_rect = score_surface.get_rect(center=(288, 100))  # creates a rectangle around it to make it easyier to put in the center of the screen
+        screen.blit(score_surface, score_rect)
+
+        high_score_surface = game_font.render(f'High score: {int(high_score)}', True, (255, 255,255))  # this tupple are the RGB colors(red,green and blue) that we mix to obtain one color this is the max that gives white if everyone was zerp we would get black
+        high_score_rect = high_score_surface.get_rect(center=(288, 850))  # creates a rectangle around it to make it easyier to put in the center of the screen
+        screen.blit(high_score_surface,high_score_rect)
+
+def update_score(score,high_score):
+    if score > high_score:
+        high_score = score
+    return high_score #we have to return since the high_score is in the local scope of the function
 """
 ********** LOGIC FOR FUNCTION FOR THE GAME OVER SCREEN***************
 
@@ -58,11 +78,12 @@ else:
    game over logic
 
 """
+pygame.mixer.pre_init(frequency = 44100, size =16, channels = 1, buffer = 512) #this way the sound won't have the delay between the press of a key and hearing the sound
 
 pygame.init() #initiates all imported pygame modules
 screen = pygame.display.set_mode((576,1024)) #create a black canvas/screen width and height
 clock = pygame.time.Clock() #can limit the frame rate between other things
-game_font = pygame.font.Font('04B_19',40) # '04B_19' is a font type used in the flappyBird game,40 is the size of the text
+game_font = pygame.font.Font('04B_19.ttf',40) # '04B_19' is a font type used in the flappyBird game,40 is the size of the text
 """
 ********************************************************************
                                    GAME VARIABLES
@@ -127,6 +148,17 @@ SPAWNPIPE = pygame.USEREVENT #this event is going to be triggered by a timer and
 pygame.time.set_timer(SPAWNPIPE,1200)#event that is being triggered every 1.2 seconds
 pipe_height = [400,600,800] #all the possible heights our pipe can have
 
+#*************************SOUNDS*********************************************importing sound into pygame
+flap_sound = pygame.mixer.Sound('audio/wing.wav')
+death_sound = pygame.mixer.Sound('audio/hit.wav')
+score_sound = pygame.mixer.Sound('audio/point.wav')
+
+score_sound_countdown = 100 #new variable to make it easy to play score sound when score += 0.01  in the main loop gets to a full number(integer).
+
+
+#*******************Game over surface****************************************
+game_over_surface =  pygame.transform.scale2x(pygame.image.load('sprites/message.png').convert_alpha())
+game_over_rect = game_over_surface.get_rect(center=(288,512))
 """
 ***********************************************************
                           GAME LOOP
@@ -146,11 +178,13 @@ while True:
             if event.key == pygame.K_SPACE and game_active: #check for a specific key
                 bird_movement = 0#to disable the effects of gravity variable or the jump wouldn't work proprely
                 bird_movement -=12#to make the bird jump we need to make the bird_movement value negative
+                flap_sound.play()#plays the sound in the wave file
             if event.key == pygame.K_SPACE and game_active == False: #only runs if I press space and the game is over
                 game_active = True
                 pipe_list.clear()#when we start the game again we want to avoid spawning multiple pipes from the previous game
                 bird_rect.center = (100,512)#when the game re-starts puts the bird in the original position
-                bird_movement = 0 #clear the burd number because it can be an high positive number afecting the re-start of the game
+                bird_movement = 0 #clear the bird number because it can be an high positive number afecting the re-start of the game
+                score = 0# to avoid that when we press the keyboard key and the game restarts that the score restarts from zero
 
         if event.type == SPAWNPIPE:
             #pipe_list.append(create_pipe()) # we can't use append because in the function create pipe we are returning two variables instead of one, it it was just the bottom pipe it is ok
@@ -187,7 +221,17 @@ while True:
         pipe_list = move_pipes(
             pipe_list)  # take all the pipes and mpve them and overwrite the pipe list with the new pipes
         draw_pipes(pipe_list)  # show the new pipes
-
+        # ********************************************** SCORE  ******************************************
+        score += 0.01 #this is trigered at the same time as the next line score_sound_countdown = 100
+        score_display('main_game')
+        score_sound_countdown -= 1
+        if score_sound_countdown <= 0:
+            score_sound.play()
+            score_sound_countdown = 100
+    else:
+        screen.blit(game_over_surface,game_over_rect)
+        high_score = update_score(score,high_score)
+        score_display('game_over')
 # ********************************************** FLOOR **********************************************
     #increments added to x coordinate to make the floor move to the left
     floor_x_pos -=1
@@ -229,4 +273,3 @@ Rotation on pygame leds to losing quality
 
 """
 
-#Estou 1.21.23. write font on the screen
