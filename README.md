@@ -3,4 +3,4 @@
 
 Learn some
 of the pygame functions while training python foundations
-and having fun 🤖
+and having fun!!!
