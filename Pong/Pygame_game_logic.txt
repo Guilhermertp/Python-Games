@@ -3,4 +3,4 @@
 +++++The game is mde by the following parts: ++++++++++++++
 
 1. SETUP (Game Logic,Data) - Classes functions and variables that carry the logic of the game
-2.Loop (Drawing, Updating) - To run t he game we need a loop.
+2.Loop (Drawing, Updating) - To run the game we need a loop.
