@@ -1,4 +1,49 @@
-import pygame,sys
+import pygame,sys,random
+
+def ball_animation():
+    global ball_speed_x,ball_speed_y #this will make this variables acessible outside of the function otherside we would get an error
+    ball.x += ball_speed_x
+    ball.y += ball_speed_y
+
+    if ball.top <= 0 or ball.bottom >= screen_height:
+        ball_speed_y *= -1
+    if ball.left <=0 or ball.right >= screen_width: #check if the ball hits the right or left wall
+# we remove this line if code ball_speed_x *= -1 and replace it a function to restart the ball movement instead of inverting the speed of the ball
+       ball_restart()
+    if ball.colliderect(player) or ball.colliderect(opponent):
+        ball_speed_x *= -1
+
+    """
+    Ball hits left or right wall:
+    Teleport it to the center
+    Restart in a random direction
+    """
+
+def player_animation():
+    player.y += player_speed
+    # to avoid the player movement out of boundaries(screen)
+    if player.top <= 0:
+        player.top = 0  # puts the player at the position 0
+    if player.bottom >= screen_height:
+        player.bottom = screen_height  # puts the player at the position 0, it "teleports" by such small numbers that isn't noticeble the movement
+
+def opponent_ai():
+    if opponent.top < ball.y:
+        opponent.top += opponent_speed
+    if opponent.bottom >ball.y:
+        opponent.bottom -= opponent_speed
+    # to avoid the opponent movement out of boundaries(screen)
+    if opponent.top <= 0:
+        opponent.top = 0  # puts the opponent at the position 0
+    if opponent.bottom >= screen_height:
+        opponent.bottom = screen_height  # puts the opponent at the position 0, it "teleports" by such small numbers that isn't noticeble the movement
+
+def ball_restart():
+    global ball_speed_y,ball_speed_x
+    ball.center = (screen_width/2,screen_height/2) #teleports the ball to the center after the ball its a wall in the ball function above and this fucntion is called
+    ball_speed_y *= random.choice((1,-1))# random.choice chooses a random element from a list that is passed into it
+    ball_speed_x *= random.choice((1,-1))#after the ball is teleported tot he center the speed is multiplyed by 1 or -1 that randomizes the direction
+
 
 #General setup
 pygame.init()
@@ -20,8 +65,10 @@ opponent = pygame.Rect(10, screen_height/2 - 70, 10, 140)
 bg_color = pygame.Color('grey12')
 light_grey = (200,200,200)
 
-ball_speed_x = 7
-ball_speed_y = 7
+ball_speed_x = 7 * random.choice((1,-1))#for the ball start in a random direction in the beggining of the game
+ball_speed_y = 7 * random.choice((1,-1))#for the ball start in a random direction in the beggining of the game
+player_speed = 0
+opponent_speed = 7 #the opponent speed will determine the difficulty of the game
 
 while True:
     #Handling input
@@ -29,17 +76,37 @@ while True:
         if event.type == pygame.QUIT: #cheks if the user have clicked the "x" in the top of the screen
             pygame.quit() #method that closes is the opposite of pygame.init() that starts all the pygame methods (starts the game)
             sys.exit() #makes sure that the program is not still runing in the back
+        if event.type == pygame.KEYDOWN: #checks for any key in the keyboard if have been pressed fo specific key we need to define a second condition
+            if event.key == pygame.K_DOWN: #to check for a specific key in this case key down
+               #code that is going to be executed if the down key is pressed
+               #if by example we declared player.y += 7 it won't work because we had to press several times the key,
+               #keeping it pushed down won't trigger the event we would nee to keep pushing the key and the increment will be small to fix that
+               #we need to declare a variable called player speed!!!!
+               player_speed += 7
+            if event.key == pygame.K_UP:
+                player_speed -= 7
 
-    ball.x += ball_speed_x
-    ball.y += ball_speed_y
+        if event.type == pygame.KEYUP: #checks for any key in the keyboard if have been pressed fo specific key we need to define a second condition
+            if event.key == pygame.K_DOWN: #to check for a specific key in this case key up
+               player_speed -= 7
+            if event.key == pygame.K_UP:
+                player_speed += 7
 
-    if ball.top <= 0 or ball.bottom >= screen_height:
-        ball_speed_y *= -1
-    if ball. left <=0 or ball.right >= screen_width:
-        ball_speed_x *= -1
+    """
+    PLAYER MOVEMENT LOGIC
+    1.Declare player speed variable
+    2.Add this speed to the player on every frame
+    3.No button pressed: speed = 0
+    4.Button pressed:player speed becomes positive or negative
+    """
 
-    if ball.colliderect(player) or ball.colliderect(opponent):
-        ball_speed_x *= -1
+
+
+    ball_animation()
+    player_animation()
+    opponent_ai()
+
+
 
     #Visuals
     screen.fill(bg_color)#add the background color by filling the entire display surface
@@ -55,5 +122,5 @@ while True:
     clock.tick(60) #limits how fast the loop runs
 
 
-#I'm at 18 minutes
-#https://www.youtube.com/watch?v=Qf3-aDXG8q4&list=PL8ui5HK3oSiEk9HaKoVPxSZA03rmr9Z0k
+#I'm at  minutes
+#https://www.youtube.com/watch?v=E4Ih9mpn5tk&list=PL8ui5HK3oSiEk9HaKoVPxSZA03rmr9Z0k&index=2
